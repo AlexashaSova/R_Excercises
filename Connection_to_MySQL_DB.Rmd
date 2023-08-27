@@ -1,0 +1,68 @@
+---
+---
+---
+
+# Connection to existing MySQL database
+
+```{r}
+library(RMySQL)
+library(data.table)
+```
+
+1.  Connect to R
+
+```{r}
+mysql_db_connection <- dbConnect(RMySQL::MySQL(),
+                                 dbname = "pharmacy_innodb",
+                                 host = "localhost",
+                                 port = 3306,
+                                 user = "root",
+                                 password = "sovyshka07")
+```
+
+2.  Listing tables of the connection
+
+```{r}
+dbListTables(mysql_db_connection)
+```
+
+3.  Query result written to the *data.table*
+
+```{r}
+query_get_all_pharmacies <- dbSendQuery(mysql_db_connection,
+                                        "select * from pharmacy")
+all_pharmacies <- data.table(fetch(query_get_all_pharmacies))
+all_pharmacies
+
+```
+
+We have to clear query results in connection after executing query:
+
+```{r}
+dbClearResult(dbListResults(mysql_db_connection)[[1]])
+```
+
+4.  Query to get all data on medicines:
+
+```{r}
+query_get_all_pharmacies <- dbSendQuery(mysql_db_connection,
+                                        "select * from preparation p
+                                        join manufacturer m on p.fk_manufacturer = m.id_manufacturer
+                                        join active_substance act on p.fk_substance = act.id_substance
+                                        join category c on p.fk_category = c.id_category
+                                        join measurement ms on p.fk_measurement = ms.id_measurement")
+all_medicines <- data.table(fetch(query_get_all_pharmacies))
+all_medicines
+```
+
+```{r}
+nrow(all_medicines)
+```
+
+```{r}
+dbClearResult(dbListResults(mysql_db_connection)[[1]])
+```
+
+```{r}
+dbDisconnect(mysql_db_connection)
+```
